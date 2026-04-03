@@ -1,8 +1,6 @@
 import express from 'express';
 import 'dotenv/config';
-import db from '../DB/index.js';
-import { usersTable } from '../Models/users.model.js';
-import { eq } from 'drizzle-orm';
+import {getUserByEmail,insertNewUserInDB} from '../Services/user.service.js'
 import { createHmac, randomBytes } from 'node:crypto';
 
 
@@ -20,14 +18,9 @@ routes.post('/signup', async (req, res) => {
         });
     }
 
-    const [user] = await db.select({
-        id: usersTable.id,
-        email: usersTable.email
-    })
-        .from(usersTable).
-        where(eq(usersTable.email, email));
+    const existingUser= await getUserByEmail(email);
 
-    if (user) {
+    if (existingUser) {
         return res.status(400).json({
             error: `User with email: ${email} already exists.`
         });
@@ -38,16 +31,13 @@ routes.post('/signup', async (req, res) => {
     const salt = randomBytes(256).toString('hex');
     const hashedPassword = createHmac('sha256', salt).update(password).digest('hex');
 
-    // insert new user in db
-    const [newUser] = await db.insert(usersTable).values({
+    const newUser = insertNewUserInDB({
         firstname,
         lastname,
         email,
-        password: hashedPassword,
+        hashedPassword,
         salt
-    }).
-        returning({ userId: usersTable.id })
-
+    });
 
      // user signedup successfuly
      return res.status(200).json({
@@ -55,11 +45,7 @@ routes.post('/signup', async (req, res) => {
 
      })   
 
-
-
-
-
-})
+});
 
 
 
