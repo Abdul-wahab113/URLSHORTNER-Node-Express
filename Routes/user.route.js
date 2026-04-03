@@ -1,8 +1,8 @@
 import express from 'express';
 import 'dotenv/config';
-import {getUserByEmail,insertNewUserInDB} from '../Services/user.service.js'
+import { getUserByEmail, insertNewUserInDB } from '../Services/user.service.js'
 import { createHmac, randomBytes } from 'node:crypto';
-
+import { userSignupPostRequestBodySchema } from '../Validation/user.validation.js';
 
 
 const routes = express.Router();
@@ -10,7 +10,17 @@ const routes = express.Router();
 
 routes.post('/signup', async (req, res) => {
 
-    const { firstname, lastname, email, password } = req.body;
+    const validationResult = await userSignupPostRequestBodySchema.safeParseAsync(req.body);
+
+    // if the validation failed then return the error to client
+    if (validationResult.error) {
+        return res.status(400).json({
+            error: validationResult.error.format()
+        });
+    }
+
+    // final validated data
+    const { firstname, lastname, email, password } = validationResult.data;
 
     if (!firstname) {
         return res.status(400).json({
@@ -18,7 +28,8 @@ routes.post('/signup', async (req, res) => {
         });
     }
 
-    const existingUser= await getUserByEmail(email);
+    // check if user with the same email already exists in db
+    const existingUser = await getUserByEmail(email);
 
     if (existingUser) {
         return res.status(400).json({
@@ -31,7 +42,7 @@ routes.post('/signup', async (req, res) => {
     const salt = randomBytes(256).toString('hex');
     const hashedPassword = createHmac('sha256', salt).update(password).digest('hex');
 
-    const newUser = insertNewUserInDB({
+    const newUser = await insertNewUserInDB({
         firstname,
         lastname,
         email,
@@ -39,11 +50,11 @@ routes.post('/signup', async (req, res) => {
         salt
     });
 
-     // user signedup successfuly
-     return res.status(200).json({
-        message:"User created successfully",
+    // user signedup successfuly
+    return res.status(200).json({
+        message: "User created successfully",
 
-     })   
+    })
 
 });
 
