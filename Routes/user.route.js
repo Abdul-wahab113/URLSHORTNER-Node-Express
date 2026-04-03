@@ -1,8 +1,9 @@
 import express from 'express';
 import 'dotenv/config';
 import { getUserByEmail, insertNewUserInDB } from '../Services/user.service.js'
-import { createHmac, randomBytes } from 'node:crypto';
+import { hashPassword } from '../Utils/hash.js';
 import { userSignupPostRequestBodySchema, userLoginPostRequestBodySchemea } from '../Validation/user.validation.js';
+import { createJWTToken } from '../Utils/token.js';
 
 
 const routes = express.Router();
@@ -39,8 +40,10 @@ routes.post('/signup', async (req, res) => {
 
 
     // hashing plan password 
-    const salt = randomBytes(256).toString('hex');
-    const hashedPassword = createHmac('sha256', salt).update(password).digest('hex');
+    const { hashedPassword, salt } = hashPassword(password);
+
+    console.log(`new hased :${hashedPassword}`);
+
 
     const newUser = await insertNewUserInDB({
         firstname,
@@ -82,20 +85,28 @@ routes.post('/login', async (req, res) => {
     }
 
     // if user with given email found in db
-    const salt = existingUser.salt;
-    const newHashedPassword = createHmac('sha256', salt).update(password).digest('hex');
+    const newHashedPassword = hashPassword(password, existingUser.salt);
 
-    if (newHashedPassword !== existingUser.password) {
+    if (newHashedPassword.hashedPassword !== existingUser.password) {
         return res.status(400).json({
             error: "Incorrect Password!"
         });
     }
 
+    // create jwt token and asign to user.
+    const payload = {
+        userID: existingUser.id,
+        emial: existingUser.email
+    };
+
+    const token = createJWTToken(payload);
+
     return res.status(200).json({
-        status: "User loged in Successfully."
+        status: "User loged in Successfully.",
+        data: {
+            token: token
+        }
     });
-
-
 });
 
 

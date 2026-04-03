@@ -23,7 +23,7 @@ export async function insertNewUserInDB({ firstname, lastname, email, hashedPass
         firstname,
         lastname,
         email,
-        password: hashedPassword,
+        password:hashedPassword,
         salt
     }).
         returning({ userId: usersTable.id });
