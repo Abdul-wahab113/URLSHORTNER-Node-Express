@@ -95,11 +95,11 @@ routes.post('/login', async (req, res) => {
 
     // create jwt token and asign to user.
     const payload = {
-        userID: existingUser.id,
-        emial: existingUser.email
+        id: existingUser.id,
     };
 
-    const token = createJWTToken(payload);
+    // create the JWT Tokens and asign to the user
+    const token = await createJWTToken(payload);
 
     return res.status(200).json({
         status: "User loged in Successfully.",

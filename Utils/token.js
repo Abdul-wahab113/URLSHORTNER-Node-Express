@@ -1,9 +1,21 @@
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
+import { tokenSchema } from '../Validation/token.validation.js';
 
-export function createJWTToken(payload) {
+export async function createJWTToken(payload) {
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+    const validationResult = await tokenSchema.safeParseAsync(payload);
+
+    // if validation failed
+    if (validationResult.error) {
+        throw new Error(validationResult.error);
+    }
+
+    //after successfull validation
+    const validatedPayload = validationResult.data;
+
+
+    const token = jwt.sign(validatedPayload, process.env.JWT_SECRET_KEY, {
         expiresIn: '1h'
     });
 
