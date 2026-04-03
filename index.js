@@ -1,9 +1,15 @@
 import express from 'express';
 import 'dotenv/config';
+import usersRoutes from './Routes/user.route.js';
 
-const PORT = process.env.PORT;
+
 const app = express();
 
+app.use(express.json());
+
+app.use('/users', usersRoutes);
 
 
-app.listen(PORT, () => { `Server is up and Running on PORT: ${PORT}` });
+app.listen(process.env.PORT, () => {
+    console.log(`Server is up and running on PORT: ${process.env.PORT}`);
+});
