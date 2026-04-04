@@ -33,3 +33,15 @@ export async function deleteUrl(urlID, userID) {
         });
     return result;
 };
+
+
+export async function getTargetUrlByCode(givenShortCode) {
+
+    const [result] = await db.select({
+        targetURL: urlsTable.targetUrl
+    }).
+        from(urlsTable).
+        where(eq(urlsTable.shortCode, givenShortCode));
+
+    return result;
+};

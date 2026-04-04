@@ -2,7 +2,7 @@ import express from 'express';
 import { ensureAuthenticated } from '../Middlewares/auth.middleware.js'
 import { urlShortnerPostRequestSchema } from '../Validation/url.validation.js'
 import { nanoid } from 'nanoid';
-import { insertNewURL, getAllShortCodesByCurrentUser, deleteUrl } from '../Services/url.service.js'
+import { insertNewURL, getAllShortCodesByCurrentUser, deleteUrl, getTargetUrlByCode } from '../Services/url.service.js'
 import { id } from 'zod/locales';
 
 
@@ -82,6 +82,23 @@ routes.delete('/:urlid', async (req, res) => {
     return res.status(200).json({
         success: "URL deleted successfully."
     });
+});
+
+
+// redirct to actual url when user gives the code of it 
+routes.get('/:urlcode', async (req, res) => {
+
+    const givenShortCode = req.params.urlcode;    
+    const result = await getTargetUrlByCode(givenShortCode);
+
+    if (!result) {
+        return res.status(400).json({
+            error: `URL with short code: ${givenShortCode} NOT FOUND!`
+        });
+    }
+
+    return res.status(301).redirect(result.targetURL);
+
 });
 
 export default routes;
