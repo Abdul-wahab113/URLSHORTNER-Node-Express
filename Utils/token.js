@@ -21,3 +21,13 @@ export async function createJWTToken(payload) {
 
     return token;
 };
+
+export function validateToken(token) {
+
+    try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        return payload;
+    } catch (error) {
+        return null;
+    }
+};
