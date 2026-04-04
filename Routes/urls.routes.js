@@ -2,7 +2,8 @@ import express from 'express';
 import { ensureAuthenticated } from '../Middlewares/auth.middleware.js'
 import { urlShortnerPostRequestSchema } from '../Validation/url.validation.js'
 import { nanoid } from 'nanoid';
-import { insertNewURL, getAllShortCodesByCurrentUser } from '../Services/url.service.js'
+import { insertNewURL, getAllShortCodesByCurrentUser, deleteUrl } from '../Services/url.service.js'
+import { id } from 'zod/locales';
 
 
 const routes = express.Router();
@@ -62,5 +63,25 @@ routes.get('/my-urls', ensureAuthenticated, async (req, res) => {
     return res.status(200).json(result);
 });
 
+
+// delete the url
+routes.delete('/:urlid', async (req, res) => {
+
+    const urlID = req.params.urlid;
+    const userID = req?.user.id;
+
+
+    const deletedURL = await deleteUrl(urlID, userID);
+
+    if (!deletedURL) {
+        return res.status(400).json({
+            error: `URL with id: ${urlID} not found! to be deleted`
+        });
+    }
+
+    return res.status(200).json({
+        success: "URL deleted successfully."
+    });
+});
 
 export default routes;

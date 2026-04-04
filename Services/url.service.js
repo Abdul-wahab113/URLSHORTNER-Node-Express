@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import db from '../DB/index.js'
 import { urlsTable } from '../Models/index.js';
 
@@ -22,4 +22,14 @@ export async function getAllShortCodesByCurrentUser(userID) {
     const result = await db.select().from(urlsTable).where(eq(urlsTable.userId, userID));
 
     return result;
-}
+};
+
+export async function deleteUrl(urlID, userID) {
+
+    const [result] = await db.delete(urlsTable).
+        where(and(eq(urlsTable.id, urlID), eq(urlsTable.userId, userID))).
+        returning({
+            id: urlsTable.id
+        });
+    return result;
+};
