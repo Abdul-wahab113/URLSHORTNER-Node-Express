@@ -2,11 +2,12 @@ import express from 'express';
 import { ensureAuthenticated } from '../Middlewares/auth.middleware.js'
 import { urlShortnerPostRequestSchema } from '../Validation/url.validation.js'
 import { nanoid } from 'nanoid';
-import { insertNewURL } from '../Services/url.service.js'
+import { insertNewURL, getAllShortCodesByCurrentUser } from '../Services/url.service.js'
+
 
 const routes = express.Router();
 
-
+// user can map a short code to a long url
 routes.post('/shorten', ensureAuthenticated, async (req, res) => {
 
     const userID = req?.user.id;
@@ -44,6 +45,22 @@ routes.post('/shorten', ensureAuthenticated, async (req, res) => {
 
 });
 
+
+// get all the generated short codes by a the current logged in user
+routes.get('/my-urls', ensureAuthenticated, async (req, res) => {
+
+    const userID = req?.user.id;
+
+    const result = await getAllShortCodesByCurrentUser(userID);
+
+    if (result.length === 0) {
+        return res.status(404).json({
+            error: "There is no registered short URL by this user"
+        });
+    }
+
+    return res.status(200).json(result);
+});
 
 
 export default routes;
